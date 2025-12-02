@@ -1,6 +1,7 @@
 #![allow(unused)]
 use std::io::Read;
 
+mod ids;
 mod safe;
 
 fn input_data(day: &str, file: &str) -> String {
@@ -98,5 +99,95 @@ mod day1 {
     #[test]
     fn part2_example1() {
         assert_eq!(solve_part2(&test_file("example1.txt")), 6);
+    }
+}
+
+#[cfg(test)]
+mod day2 {
+    use super::*;
+    use crate::ids::IdRange;
+    use std::str::FromStr;
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day2", name))
+    }
+
+    fn parse_ranges(content: &str) -> Vec<IdRange> {
+        content
+            .split(",")
+            .map(|r| IdRange::from_str(&r).expect(&format!("invalid range '{}'", r)))
+            .collect()
+    }
+
+    fn solve_part1(input: &str) -> u64 {
+        let is_valid = |id: u64| {
+            let s = id.to_string();
+            if s.len() % 2 == 1 {
+                return true;
+            }
+
+            let half_len = s.len() / 2;
+            &s[..half_len] != &s[half_len..]
+        };
+
+        let ranges = parse_ranges(&input);
+        let mut invalid_sum = 0;
+        for range in ranges {
+            for id in range.from..=range.to {
+                if !is_valid(id) {
+                    invalid_sum += id;
+                }
+            }
+        }
+        invalid_sum
+    }
+
+    fn solve_part2(input: &str) -> u64 {
+        let is_valid = |id: u64| {
+            let s = id.to_string();
+            if s.len() == 1 {
+                return true;
+            }
+
+            for chunk_len in 1..=s.len() / 2 {
+                let chunk = &s[..chunk_len];
+                let mut repeated = String::with_capacity(s.len());
+                for _ in 0..s.len() / chunk_len {
+                    repeated.push_str(chunk);
+                }
+
+                if repeated == s {
+                    return false;
+                }
+            }
+
+            true
+        };
+
+        let ranges = parse_ranges(&input);
+        let mut invalid_sum = 0;
+        for range in ranges {
+            for id in range.from..=range.to {
+                if !is_valid(id) {
+                    invalid_sum += id;
+                }
+            }
+        }
+        invalid_sum
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt")), 38310256125);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 58961152806);
+    }
+
+    #[test]
+    fn part2_example1() {
+        assert_eq!(solve_part2(&test_file("example1.txt")), 4174379265);
     }
 }
