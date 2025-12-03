@@ -1,6 +1,7 @@
 #![allow(unused)]
 use std::io::Read;
 
+mod batteries;
 mod ids;
 mod safe;
 
@@ -189,5 +190,48 @@ mod day2 {
     #[test]
     fn part2_example1() {
         assert_eq!(solve_part2(&test_file("example1.txt")), 4174379265);
+    }
+}
+
+#[cfg(test)]
+mod day3 {
+    use crate::batteries::{Joltage, max_joltage};
+
+    use super::*;
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day3", name))
+    }
+
+    fn parse_batteries(content: &str) -> Vec<Vec<Joltage>> {
+        content
+            .lines()
+            .map(|line| {
+                line.chars()
+                    .map(|c| c.to_digit(10).unwrap())
+                    .map(|d| Joltage(d))
+                    .collect()
+            })
+            .collect()
+    }
+
+    fn solve_part1(input: &str) -> u32 {
+        let batteries = parse_batteries(input);
+
+        batteries.iter().map(|b| max_joltage(&b).0).sum()
+    }
+
+    fn solve_part2(input: &str) -> u64 {
+        todo!()
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt")), 17535);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 58961152806);
     }
 }
