@@ -1,31 +1,28 @@
-#[derive(Clone, Copy)]
-pub struct Joltage(pub u32);
+pub fn max_joltage(batteries: &[u32], count: u32) -> u32 {
+    let mut so_far = Vec::with_capacity(count as usize);
+    max_joltage_rec(batteries, count, &mut so_far);
+    so_far.reverse();
 
-pub fn max_joltage(batteries: &[Joltage]) -> Joltage {
-    let mut curr_best = Joltage(0);
-    for (i, &first) in batteries.into_iter().enumerate() {
-        let max = max_joltage_from(first, &batteries[i + 1..]);
-        if let Some(max) = max {
-            if max.0 > curr_best.0 {
-                curr_best = max;
-            }
-        }
-    }
-
-    curr_best
+    so_far
+        .iter()
+        .enumerate()
+        .map(|(i, d)| 10_u32.pow(i as u32) * d)
+        .sum()
 }
 
-fn max_joltage_from(first: Joltage, rest: &[Joltage]) -> Option<Joltage> {
-    if rest.is_empty() {
-        return None;
-    }
-    let mut max = 10 * first.0;
-    for second in rest {
-        let sum = (10 * first.0) + second.0;
-        if sum > max {
-            max = sum;
-        }
+fn max_joltage_rec(batteries: &[u32], count: u32, so_far: &mut Vec<u32>) {
+    if batteries.is_empty() || count == 0 {
+        return;
     }
 
-    Some(Joltage(max))
+    let segment = &batteries[..batteries.len() - count as usize];
+
+    let digit = *segment.iter().max().expect("segment should not be empty");
+    so_far.push(digit);
+
+    max_joltage_rec(
+        &batteries[batteries.len() - count as usize..],
+        count - 1,
+        so_far,
+    );
 }
