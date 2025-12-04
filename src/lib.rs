@@ -203,21 +203,46 @@ mod day3 {
         read_file_contents(&input_data("day3", name))
     }
 
-    fn parse_batteries(content: &str) -> Vec<Vec<u32>> {
+    fn parse_batteries(content: &str) -> Vec<Vec<u64>> {
         content
             .lines()
-            .map(|line| line.chars().map(|c| c.to_digit(10).unwrap()).collect())
+            .map(|line| {
+                line.chars()
+                    .map(|c| c.to_digit(10).unwrap() as u64)
+                    .collect()
+            })
             .collect()
     }
 
-    fn solve_part1(input: &str) -> u32 {
+    fn solve_part1(input: &str) -> u64 {
         let batteries = parse_batteries(input);
 
-        batteries.iter().map(|b| max_joltage(&b, 2)).sum()
+        let mut sum = 0;
+        for line in batteries {
+            let m = max_joltage(&line, 2);
+            println!(
+                "{}",
+                line.into_iter()
+                    .map(|d| char::from_digit(d as u32, 10).unwrap())
+                    .collect::<String>()
+            );
+            println!("{}", m);
+            sum += m;
+        }
+
+        sum
     }
 
     fn solve_part2(input: &str) -> u64 {
-        todo!()
+        let batteries = parse_batteries(input);
+
+        let mut sum = 0;
+        for line in batteries {
+            let m = max_joltage(&line, 12);
+            sum += m as u64;
+        }
+
+        sum
     }
 
     #[test]
@@ -225,8 +250,12 @@ mod day3 {
         assert_eq!(solve_part1(&test_file("input.txt")), 17535);
     }
 
-    // #[test]
-    // fn part2() {
-    //     assert_eq!(solve_part2(&test_file("input.txt")), 58961152806);
-    // }
+    #[test]
+    fn part1_example1() {
+        assert_eq!(solve_part1(&test_file("example1.txt")), 357);
+    }
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 173577199527257);
+    }
 }
