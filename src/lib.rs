@@ -3,6 +3,7 @@ use std::io::Read;
 
 mod batteries;
 mod ids;
+mod paper;
 mod safe;
 
 fn input_data(day: &str, file: &str) -> String {
@@ -257,5 +258,73 @@ mod day3 {
     #[test]
     fn part2() {
         assert_eq!(solve_part2(&test_file("input.txt")), 173577199527257);
+    }
+}
+
+#[cfg(test)]
+mod day4 {
+    use simple_grid::Grid;
+
+    use super::*;
+    use crate::paper::Papers;
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day4", name))
+    }
+
+    fn parse_papers(content: &str) -> Papers {
+        let lines = content.lines().collect::<Vec<_>>();
+        let grid = Grid::new(
+            lines[0].len(),
+            lines.len(),
+            lines
+                .into_iter()
+                .flat_map(|line| {
+                    line.chars().map(|c| {
+                        if c == '@' {
+                            Some(())
+                        } else if c == '.' {
+                            None
+                        } else {
+                            unreachable!()
+                        }
+                    })
+                })
+                .collect(),
+        );
+        Papers::new(grid)
+    }
+
+    fn solve_part1(input: &str) -> usize {
+        let mut papers = parse_papers(input);
+        papers.accessible().len()
+    }
+
+    fn solve_part2(input: &str) -> usize {
+        let mut papers = parse_papers(input);
+
+        let mut total = 0;
+        loop {
+            let accessible = papers.accessible();
+            if accessible.is_empty() {
+                break;
+            }
+            total += accessible.len();
+            for paper in accessible {
+                papers.remove_paper(paper);
+            }
+        }
+
+        total
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt")), 1389);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 9000);
     }
 }
