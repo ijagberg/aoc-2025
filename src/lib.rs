@@ -3,6 +3,7 @@ use std::io::Read;
 
 mod batteries;
 mod ids;
+mod ingredients;
 mod paper;
 mod safe;
 
@@ -21,10 +22,9 @@ fn read_file_contents(path: &str) -> String {
 
 #[cfg(test)]
 mod day1 {
-    use std::str::FromStr;
-
     use super::*;
     use safe::*;
+    use std::str::FromStr;
 
     fn test_file(name: &str) -> String {
         read_file_contents(&input_data("day1", name))
@@ -196,9 +196,8 @@ mod day2 {
 
 #[cfg(test)]
 mod day3 {
-    use crate::batteries::max_joltage;
-
     use super::*;
+    use crate::batteries::max_joltage;
 
     fn test_file(name: &str) -> String {
         read_file_contents(&input_data("day3", name))
@@ -263,10 +262,9 @@ mod day3 {
 
 #[cfg(test)]
 mod day4 {
-    use simple_grid::Grid;
-
     use super::*;
     use crate::paper::Papers;
+    use simple_grid::Grid;
 
     fn test_file(name: &str) -> String {
         read_file_contents(&input_data("day4", name))
@@ -326,5 +324,67 @@ mod day4 {
     #[test]
     fn part2() {
         assert_eq!(solve_part2(&test_file("input.txt")), 9000);
+    }
+}
+
+#[cfg(test)]
+mod day5 {
+    use super::*;
+    use crate::ingredients::Ranges;
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day5", name))
+    }
+
+    fn parse_ranges(content: &str) -> (Ranges, Vec<u64>) {
+        let mut ranges = Vec::new();
+        let mut lines = content.lines();
+        loop {
+            let line = lines.next().unwrap();
+            if line.trim().is_empty() {
+                break;
+            }
+
+            let (from, to) = line.split_once("-").unwrap();
+            ranges.push((from.parse().unwrap(), to.parse().unwrap()));
+        }
+
+        let mut ingredients = lines.map(|l| l.parse().unwrap()).collect();
+
+        (Ranges::new(ranges), ingredients)
+    }
+
+    fn solve_part1(input: &str) -> usize {
+        let (ranges, ingredients) = parse_ranges(input);
+
+        let mut fresh_count = 0;
+        for ingredient in ingredients {
+            if ranges.contains(ingredient) {
+                fresh_count += 1;
+            }
+        }
+
+        fresh_count
+    }
+
+    fn solve_part2(input: &str) -> usize {
+        let (ranges, _) = parse_ranges(input);
+
+        ranges.count_fresh()
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt")), 517);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 336173027056994);
+    }
+
+    #[test]
+    fn part2_example1() {
+        assert_eq!(solve_part2(&test_file("example1.txt")), 14);
     }
 }
