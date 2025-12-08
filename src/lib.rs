@@ -2,8 +2,10 @@
 use std::io::Read;
 
 mod batteries;
+mod cephalopod;
 mod ids;
 mod ingredients;
+mod manifolds;
 mod paper;
 mod safe;
 
@@ -386,5 +388,127 @@ mod day5 {
     #[test]
     fn part2_example1() {
         assert_eq!(solve_part2(&test_file("example1.txt")), 14);
+    }
+}
+
+#[cfg(test)]
+mod day6 {
+    use simple_grid::Grid;
+
+    use super::*;
+    use crate::cephalopod::{Math, Op};
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day6", name))
+    }
+
+    fn parse_math(content: &str) -> (Math, Vec<Op>) {
+        let mut lines: Vec<_> = content.lines().collect();
+
+        let ops = lines[lines.len() - 1]
+            .split_whitespace()
+            .map(|s| match s {
+                "+" => Op::Add,
+                "*" => Op::Mul,
+                e => panic!("invalid op: '{}'", e),
+            })
+            .collect();
+
+        let mut data = Vec::new();
+        let mut first_line: Vec<_> = lines[0]
+            .split_whitespace()
+            .map(|n| n.parse().unwrap())
+            .collect();
+        let width = first_line.len();
+        let height = lines.len() - 1;
+        data.append(&mut first_line);
+        for line in &lines[1..lines.len() - 1] {
+            data.append(
+                &mut line
+                    .split_whitespace()
+                    .map(|n| n.parse::<u64>().unwrap())
+                    .collect(),
+            );
+        }
+
+        (Math::new(Grid::new(width, height, data)), ops)
+    }
+
+    fn solve_part1(input: &str) -> u64 {
+        let (math, ops) = parse_math(input);
+
+        let result = math.calculate(&ops).unwrap();
+
+        result.iter().sum()
+    }
+
+    fn solve_part2(input: &str) -> u64 {
+        let (math, ops) = parse_math(input);
+
+        let result = math.cephalopod_calculate(&ops).unwrap();
+
+        println!("{:?}", result);
+        result.iter().sum()
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt")), 4719804927602);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 336173027056994);
+    }
+
+    #[test]
+    fn part2_example1() {
+        assert_eq!(solve_part2(&test_file("example1.txt")), 14);
+    }
+}
+
+#[cfg(test)]
+mod day7 {
+    use simple_grid::Grid;
+
+    use super::*;
+    use crate::manifolds::Manifolds;
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day7", name))
+    }
+
+    fn parse_manifolds(content: &str) -> Manifolds {
+        let mut lines: Vec<_> = content.lines().collect();
+        let mut data = lines.iter().flat_map(|l| l.chars()).collect();
+
+        Manifolds::new(Grid::new(lines[0].len(), lines.len(), data)).unwrap()
+    }
+
+    fn solve_part1(input: &str) -> usize {
+        let manifolds = parse_manifolds(input);
+
+        manifolds.count_splits()
+    }
+
+    fn solve_part2(input: &str) -> usize {
+        let manifolds = parse_manifolds(input);
+
+        manifolds.count_paths()
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt")), 1579);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 13418215871354);
+    }
+
+    #[test]
+    fn part2_example1() {
+        assert_eq!(solve_part2(&test_file("example1.txt")), 40);
     }
 }
