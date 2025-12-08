@@ -5,6 +5,7 @@ mod batteries;
 mod cephalopod;
 mod ids;
 mod ingredients;
+mod junctions;
 mod manifolds;
 mod paper;
 mod safe;
@@ -511,4 +512,92 @@ mod day7 {
     fn part2_example1() {
         assert_eq!(solve_part2(&test_file("example1.txt")), 40);
     }
+}
+
+#[cfg(test)]
+mod day8 {
+    use crate::junctions::Junction;
+
+    use super::*;
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day8", name))
+    }
+
+    fn parse_junctions(content: &str) -> Vec<Junction> {
+        content
+            .lines()
+            .map(|l| {
+                let mut parts = l.split(',').map(|p| p.parse().unwrap());
+                Junction::new(
+                    parts.next().unwrap(),
+                    parts.next().unwrap(),
+                    parts.next().unwrap(),
+                )
+            })
+            .collect()
+    }
+
+    fn solve_part1(input: &str) -> u64 {
+        let mut junctions = parse_junctions(input);
+        let mut pairs = Vec::with_capacity(junctions.len().pow(2));
+
+        for i in 0..junctions.len() {
+            for j in i + 1..junctions.len() {
+                pairs.push((junctions[i], junctions[j]));
+            }
+        }
+
+        pairs.sort_by_key(|(a, b)| Junction::distance(*a, *b));
+
+        todo!("union-find")
+    }
+
+    // fn solve_part2(input: &str) -> u64 {
+    //     let rotations = parse_rotations(&input);
+    //     let mut dial = Dial::new(50).unwrap();
+    //     let mut password = 0_u64;
+    //     for Rotation(dir, dist) in rotations {
+    //         let full_rotations = dist / 100;
+    //         let prev_pos = dial.pos();
+    //         match dir {
+    //             Direction::Left => {
+    //                 dial.turn_left(dist);
+    //                 let curr_pos = dial.pos();
+    //                 if (prev_pos != 0 && prev_pos < curr_pos) || curr_pos == 0 {
+    //                     // we have moved through the 0
+    //                     dbg!(dir, dist, prev_pos, dial);
+    //                     password += 1;
+    //                 }
+    //             }
+    //             Direction::Right => {
+    //                 dial.turn_right(dist);
+    //                 let curr_pos = dial.pos();
+    //                 if (prev_pos != 0 && prev_pos > curr_pos) || curr_pos == 0 {
+    //                     // we have moved through the 0
+    //                     dbg!(dir, dist, prev_pos, dial);
+    //                     password += 1;
+    //                 }
+    //             }
+    //         }
+    //         password += full_rotations;
+    //     }
+    //
+    //     password
+    // }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt")), 1031);
+    }
+
+    // #[test]
+    // fn part2() {
+    //     assert_eq!(solve_part2(&test_file("input.txt")), 5831);
+    // }
+    //
+    // #[test]
+    // fn part2_example1() {
+    //     assert_eq!(solve_part2(&test_file("example1.txt")), 6);
+    // }
 }
