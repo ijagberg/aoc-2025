@@ -394,10 +394,9 @@ mod day5 {
 
 #[cfg(test)]
 mod day6 {
-    use simple_grid::Grid;
-
     use super::*;
     use crate::cephalopod::{Math, Op};
+    use simple_grid::Grid;
 
     fn test_file(name: &str) -> String {
         read_file_contents(&input_data("day6", name))
@@ -435,6 +434,40 @@ mod day6 {
         (Math::new(Grid::new(width, height, data)), ops)
     }
 
+    fn parse_math_2(content: &str) -> (Grid<char>, Vec<Op>) {
+        let lines: Vec<_> = content.lines().collect();
+        let mut char_ops: Vec<_> = lines[lines.len() - 1].chars().collect();
+        let mut curr_op = char_ops[0];
+        for i in 1..char_ops.len() {
+            if char_ops[i] == ' ' {
+                char_ops[i] = curr_op;
+            } else {
+                curr_op = char_ops[i];
+            }
+        }
+
+        let mut ops = Vec::with_capacity(char_ops.len());
+        for i in 0..char_ops.len() {
+            ops.push(match char_ops[i] {
+                '+' => Op::Add,
+                '*' => Op::Mul,
+                e => unimplemented!("{}", e),
+            });
+        }
+
+        (
+            Grid::new(
+                lines[0].len(),
+                lines.len() - 1,
+                lines[0..lines.len() - 1]
+                    .into_iter()
+                    .flat_map(|l| l.chars())
+                    .collect(),
+            ),
+            ops,
+        )
+    }
+
     fn solve_part1(input: &str) -> u64 {
         let (math, ops) = parse_math(input);
 
@@ -444,12 +477,47 @@ mod day6 {
     }
 
     fn solve_part2(input: &str) -> u64 {
-        let (math, ops) = parse_math(input);
+        let (grid, ops) = parse_math_2(input);
 
-        let result = math.cephalopod_calculate(&ops).unwrap();
-
-        println!("{:?}", result);
-        result.iter().sum()
+        let mut total_sum = 0_u64;
+        let mut column_values = Vec::new();
+        for col in 0..ops.len() {
+            let op = ops[col];
+            if grid.column_iter(col).all(|&c| c == ' ') {
+                match op {
+                    Op::Add => {
+                        let sum: u64 = column_values.iter().sum();
+                        total_sum += sum;
+                    }
+                    Op::Mul => {
+                        let product: u64 = column_values.iter().product();
+                        total_sum += product;
+                    }
+                }
+                // This is an empty column, which means we reset the column result.
+                column_values.clear();
+            } else {
+                let num: u64 = grid
+                    .column_iter(col)
+                    .collect::<String>()
+                    .trim()
+                    .parse()
+                    .unwrap();
+                column_values.push(num);
+            }
+        }
+        let last_op = ops[ops.len() - 1];
+        match last_op {
+            Op::Add => {
+                let sum: u64 = column_values.iter().sum();
+                total_sum += sum;
+            }
+            Op::Mul => {
+                let product: u64 = column_values.iter().product();
+                total_sum += product;
+            }
+        }
+        total_sum
     }
 
     #[test]
@@ -459,12 +527,12 @@ mod day6 {
 
     #[test]
     fn part2() {
-        assert_eq!(solve_part2(&test_file("input.txt")), 336173027056994);
+        assert_eq!(solve_part2(&test_file("input.txt")), 9608327000261);
     }
 
     #[test]
     fn part2_example1() {
-        assert_eq!(solve_part2(&test_file("example1.txt")), 14);
+        assert_eq!(solve_part2(&test_file("example1.txt")), 3263827);
     }
 }
 
