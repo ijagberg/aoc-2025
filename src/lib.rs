@@ -516,9 +516,13 @@ mod day7 {
 
 #[cfg(test)]
 mod day8 {
-    use crate::junctions::Junction;
+    use std::{
+        cmp::Reverse,
+        collections::{HashMap, HashSet},
+    };
 
     use super::*;
+    use crate::junctions::{Junction, UnionFind};
 
     fn test_file(name: &str) -> String {
         read_file_contents(&input_data("day8", name))
@@ -527,9 +531,11 @@ mod day8 {
     fn parse_junctions(content: &str) -> Vec<Junction> {
         content
             .lines()
-            .map(|l| {
+            .enumerate()
+            .map(|(i, l)| {
                 let mut parts = l.split(',').map(|p| p.parse().unwrap());
                 Junction::new(
+                    i,
                     parts.next().unwrap(),
                     parts.next().unwrap(),
                     parts.next().unwrap(),
@@ -538,7 +544,7 @@ mod day8 {
             .collect()
     }
 
-    fn solve_part1(input: &str) -> u64 {
+    fn solve_part1(input: &str, connections: usize) -> usize {
         let mut junctions = parse_junctions(input);
         let mut pairs = Vec::with_capacity(junctions.len().pow(2));
 
@@ -550,54 +556,96 @@ mod day8 {
 
         pairs.sort_by_key(|(a, b)| Junction::distance(*a, *b));
 
-        todo!("union-find")
+        let mut union_find = UnionFind::new(junctions.len());
+        println!("{:?}", union_find);
+        for (a, b) in pairs.iter().take(connections) {
+            println!(
+                "connecting {} and {}, distance is {}",
+                a,
+                b,
+                Junction::distance(*a, *b)
+            );
+            let remaining_set = union_find.union(a.id, b.id);
+            println!("{:?}", union_find);
+        }
+
+        let mut set_sizes = HashMap::new();
+        for junction in junctions {
+            let set = union_find.find(junction.id);
+            set_sizes
+                .entry(set)
+                .and_modify(|count| *count += 1)
+                .or_insert(1_usize);
+        }
+        dbg!(&set_sizes);
+        let mut set_sizes: Vec<_> = set_sizes.values().collect();
+        set_sizes.sort_by_key(|size| Reverse(*size));
+
+        set_sizes.into_iter().take(3).product()
     }
 
-    // fn solve_part2(input: &str) -> u64 {
-    //     let rotations = parse_rotations(&input);
-    //     let mut dial = Dial::new(50).unwrap();
-    //     let mut password = 0_u64;
-    //     for Rotation(dir, dist) in rotations {
-    //         let full_rotations = dist / 100;
-    //         let prev_pos = dial.pos();
-    //         match dir {
-    //             Direction::Left => {
-    //                 dial.turn_left(dist);
-    //                 let curr_pos = dial.pos();
-    //                 if (prev_pos != 0 && prev_pos < curr_pos) || curr_pos == 0 {
-    //                     // we have moved through the 0
-    //                     dbg!(dir, dist, prev_pos, dial);
-    //                     password += 1;
-    //                 }
-    //             }
-    //             Direction::Right => {
-    //                 dial.turn_right(dist);
-    //                 let curr_pos = dial.pos();
-    //                 if (prev_pos != 0 && prev_pos > curr_pos) || curr_pos == 0 {
-    //                     // we have moved through the 0
-    //                     dbg!(dir, dist, prev_pos, dial);
-    //                     password += 1;
-    //                 }
-    //             }
-    //         }
-    //         password += full_rotations;
-    //     }
-    //
-    //     password
-    // }
+    fn solve_part2(input: &str) -> usize {
+        let mut junctions = parse_junctions(input);
+        let mut pairs = Vec::with_capacity(junctions.len().pow(2));
+
+        let mut sets = HashSet::new();
+        for i in 0..junctions.len() {
+            sets.insert(i);
+            for j in i + 1..junctions.len() {
+                pairs.push((junctions[i], junctions[j]));
+            }
+        }
+
+        pairs.sort_by_key(|(a, b)| Junction::distance(*a, *b));
+
+        let mut union_find = UnionFind::new(junctions.len());
+        println!("{:?}", union_find);
+        for (a, b) in pairs {
+            println!(
+                "connecting {} and {}, distance is {}",
+                a,
+                b,
+                Junction::distance(a, b)
+            );
+
+            let a_set = union_find.find(a.id);
+            let b_set = union_find.find(b.id);
+            let remaining_set = union_find.union(a.id, b.id);
+            if a_set != b_set {
+                if a_set == remaining_set {
+                    // remove b_set
+                    sets.remove(&b_set);
+                } else if b_set == remaining_set {
+                    // remove a_set
+                    sets.remove(&a_set);
+                }
+            }
+            if sets.len() == 1 {
+                return a.x * b.x;
+            }
+            println!("{:?}", union_find);
+        }
+
+        unreachable!()
+    }
 
     #[test]
     fn part1() {
-        assert_eq!(solve_part1(&test_file("input.txt")), 1031);
+        assert_eq!(solve_part1(&test_file("input.txt"), 1000), 102816);
     }
 
-    // #[test]
-    // fn part2() {
-    //     assert_eq!(solve_part2(&test_file("input.txt")), 5831);
-    // }
-    //
-    // #[test]
-    // fn part2_example1() {
-    //     assert_eq!(solve_part2(&test_file("example1.txt")), 6);
-    // }
+    #[test]
+    fn part1_example1() {
+        assert_eq!(solve_part1(&test_file("example1.txt"), 10), 40);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 100011612);
+    }
+
+    #[test]
+    fn part2_example1() {
+        assert_eq!(solve_part2(&test_file("example1.txt")), 25272);
+    }
 }
