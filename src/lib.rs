@@ -9,6 +9,7 @@ mod junctions;
 mod manifolds;
 mod paper;
 mod safe;
+mod theater;
 
 fn input_data(day: &str, file: &str) -> String {
     format!("inputs/{day}/{file}")
@@ -716,4 +717,49 @@ mod day8 {
     fn part2_example1() {
         assert_eq!(solve_part2(&test_file("example1.txt")), 25272);
     }
+}
+
+#[cfg(test)]
+mod day9 {
+    use super::*;
+    use crate::theater::Theater;
+    use simple_grid::GridIndex;
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day9", name))
+    }
+
+    fn parse_theater(content: &str) -> Theater {
+        let mut corners = Vec::new();
+        for line in content.lines() {
+            let (col, row) = line.split_once(",").unwrap();
+            corners.push(GridIndex::new(col.parse().unwrap(), row.parse().unwrap()));
+        }
+
+        Theater::new(corners)
+    }
+
+    fn solve_part1(input: &str, connections: usize) -> usize {
+        let theater = parse_theater(input);
+        theater.largest_rectangle()
+    }
+
+    fn solve_part2(input: &str) -> usize {
+        todo!()
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt"), 1000), 102816);
+    }
+
+    // #[test]
+    // fn part2() {
+    //     assert_eq!(solve_part2(&test_file("input.txt")), 100011612);
+    // }
+    //
+    // #[test]
+    // fn part2_example1() {
+    //     assert_eq!(solve_part2(&test_file("example1.txt")), 25272);
+    // }
 }
