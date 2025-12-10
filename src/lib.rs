@@ -6,6 +6,7 @@ mod cephalopod;
 mod ids;
 mod ingredients;
 mod junctions;
+mod machines;
 mod manifolds;
 mod paper;
 mod safe;
@@ -763,3 +764,99 @@ mod day9 {
         assert_eq!(solve_part2(&test_file("example1.txt")), 24);
     }
 }
+
+// #[cfg(test)]
+// mod day10 {
+//     use super::*;
+//     use crate::machines::{Button, Machine};
+//
+//     fn test_file(name: &str) -> String {
+//         read_file_contents(&input_data("day10", name))
+//     }
+//
+//     fn parse_machines(content: &str) -> Vec<Machine> {
+//         let mut machines = Vec::new();
+//         for line in content.lines() {
+//             let parts: Vec<_> = line.split(' ').collect();
+//             let desired_state = parts[0][1..parts[0].len() - 1]
+//                 .chars()
+//                 .map(|c| c == '#')
+//                 .collect();
+//
+//             let joltages = parts[parts.len() - 1]
+//                 .split(',')
+//                 .map(|p| {
+//                     p.trim_start_matches("{")
+//                         .trim_end_matches("}")
+//                         .parse()
+//                         .unwrap()
+//                 })
+//                 .collect();
+//
+//             let buttons = parts[1..parts.len() - 1]
+//                 .iter()
+//                 .map(|p| {
+//                     Button::new(
+//                         p.trim_start_matches("(")
+//                             .trim_end_matches(")")
+//                             .split(',')
+//                             .map(|p| p.parse().unwrap())
+//                             .collect(),
+//                     )
+//                 })
+//                 .collect();
+//
+//             machines.push(Machine::new(desired_state, buttons, joltages));
+//         }
+//
+//         machines
+//     }
+//
+//     fn solve_part1(input: &str) -> u64 {
+//         let machines = parse_machines(input);
+//
+//         let mut presses = 0;
+//         for machine in machines {
+//             let fewest_buttons = machine.fewest_buttons_lights().unwrap();
+//             let best = fewest_buttons;
+//             println!("best is {}, by pressing: {:?}", best, fewest_buttons);
+//             presses += best;
+//         }
+//
+//         presses
+//     }
+//
+//     fn solve_part2(input: &str) -> usize {
+//         let machines = parse_machines(input);
+//
+//         let mut presses = 0;
+//         for machine in machines {
+//             let fewest_buttons = machine.fewest_buttons_joltage().unwrap();
+//             let best = fewest_buttons;
+//             println!("{}", best);
+//             presses += best;
+//         }
+//
+//         presses as usize
+//     }
+//
+//     #[test]
+//     fn part1() {
+//         assert_eq!(solve_part1(&test_file("input.txt")), 520);
+//     }
+//
+//     #[test]
+//     fn part1_example1() {
+//         assert_eq!(solve_part1(&test_file("example1.txt")), 7);
+//     }
+//
+//     #[test]
+//     fn part2() {
+//         assert_eq!(solve_part2(&test_file("input.txt")), 1476550548);
+//     }
+//
+//     #[test]
+//     fn part2_example1() {
+//         assert_eq!(solve_part2(&test_file("example1.txt")), 24);
+//     }
+// }
