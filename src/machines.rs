@@ -1,114 +1,110 @@
-// use std::collections::{HashMap, HashSet, VecDeque};
-//
-// use good_lp::{Expression, IntoAffineExpression, SolverModel, highs, variable, variables};
-// use z3::{Config, Context, Optimize, Solver, ast::Int};
-//
-// pub struct Machine {
-//     lights: Vec<bool>,
-//     buttons: Vec<Button>,
-//     joltages: Vec<u64>,
-// }
-//
-// impl Machine {
-//     pub fn new(desired_state: Vec<bool>, buttons: Vec<Button>, joltages: Vec<u64>) -> Self {
-//         Self {
-//             lights: desired_state,
-//             buttons,
-//             joltages,
-//         }
-//     }
-//
-//     fn press_buttons(&self, buttons: &HashSet<usize>) -> Vec<bool> {
-//         let mut state = vec![false; self.lights.len()];
-//         for &i in buttons {
-//             for &light in &self.buttons[i].lights {
-//                 state[light] = !state[light];
-//             }
-//         }
-//
-//         state
-//     }
-//
-//     pub fn fewest_buttons_lights(&self) -> Option<u64> {
-//         // let solver = Optimize::new();
-//         //
-//         // let button_presses: Vec<Int> = (0..self.buttons.len())
-//         //     .map(|b| Int::new_const(format!("{}", b).as_str()))
-//         //     .collect();
-//         //
-//         // // For each counter, sum the presses of buttons affecting it
-//         // for (counter, &target) in self.lights.iter().enumerate() {
-//         //     let mut sum = Int::from_i64(0);
-//         //     for b in (0..self.buttons.len()) {
-//         //         if self.buttons[b].lights.contains(&counter) {
-//         //             sum = sum + &button_presses[b];
-//         //         }
-//         //     }
-//         //
-//         //     if target {
-//         //         // light should be on
-//         //         let modulo = sum % Int::from_i64(2);
-//         //         solver.assert(&modulo.eq(Int::from_i64(1)));
-//         //     } else {
-//         //         // light should be off
-//         //         let modulo = sum % Int::from_i64(2);
-//         //         solver.assert(&modulo.eq(Int::from_i64(0)));
-//         //     }
-//         // }
-//         //
-//         // // Minimize the total number of button presses
-//         // let total_presses = button_presses
-//         //     .iter()
-//         //     .fold(Int::from_i64(0), |acc, x| acc + x);
-//         // solver.minimize(&total_presses);
-//         //
-//         // // Check if a solution exists
-//         // if solver.check(&[]) == z3::SatResult::Sat {
-//         //     let model = solver.get_model().unwrap();
-//         //     let total = model.eval(&total_presses, true).unwrap().as_i64().unwrap() as i32;
-//         //     Some(total as u64)
-//         // } else {
-//         //     None
-//         // }
-//         todo!()
-//     }
-//
-//     pub fn fewest_buttons_joltage(&self) -> Option<u64> {
-//         let mut vars = variables!();
-//         let button_presses: Vec<_> = (0..self.buttons.len())
-//             .map(|_| vars.add(variable().min(0).integer()))
-//             .collect();
-//
-//         let mut problem = highs(vars.minimise(button_presses.iter().sum::<Expression>()));
-//         let mut jolts = vec![0.into_expression(); self.joltages.len()];
-//         for b in 0..self.buttons.len() {
-//             for light in self.buttons[b].lights {
-//                 // sum each button that affected this counter
-//                 jolts[light] += button_presses[b];
-//             }
-//         }
-//
-//         for (presses, target_joltage) in jolts.iter().zip(self.joltages) {
-//             problem.add_constraint(presses == target_joltage);
-//         }
-//
-//         let solution = problem.solve().ok()?;
-//
-//         let mut sum = 0;
-//         for presses in solution {
-//             println!("{}", presses);
-//             sum += presses;
-//         }
-//     }
-// }
-//
-// #[derive(Clone, PartialEq, Eq)]
-// pub struct Button {
-//     lights: Vec<usize>,
-// }
-//
-// impl Button {
-//     pub fn new(lights: Vec<usize>) -> Self {
-//         Self { lights }
-//     }
-// }
+use good_lp::{
+    Expression, IntoAffineExpression, Solution, SolverModel, highs, variable, variables,
+};
+use std::collections::{HashMap, HashSet, VecDeque};
+
+pub struct Machine {
+    lights: usize,
+    buttons: Vec<Button>,
+    joltages: Vec<u64>,
+}
+
+impl Machine {
+    pub fn new(lights: usize, buttons: Vec<Button>, joltages: Vec<u64>) -> Self {
+        Self {
+            lights,
+            buttons,
+            joltages,
+        }
+    }
+
+    pub fn fewest_buttons_lights(&self) -> Option<u64> {
+        let mut queue = VecDeque::new();
+        for button in 0..self.buttons.len() {
+            queue.push_back((1, self.buttons[button].state()));
+        }
+
+        println!("desired state: {:b}", self.lights);
+        while let Some((presses, state)) = queue.pop_front() {
+            println!("presses: {presses}, state: {state:b}");
+            if state == self.lights {
+                return Some(presses);
+            }
+
+            if presses as usize > self.buttons.len() {
+                break;
+            }
+
+            for button in 0..self.buttons.len() {
+                queue.push_back((presses + 1, state ^ self.buttons[button].state()));
+            }
+        }
+
+        None
+    }
+
+    pub fn fewest_buttons_joltage(&self) -> Option<u64> {
+        let mut vars = variables!();
+        let button_presses: Vec<_> = (0..self.buttons.len())
+            .map(|_| vars.add(variable().min(0).integer()))
+            .collect();
+
+        let mut problem = highs(vars.minimise(button_presses.iter().sum::<Expression>()));
+        let mut jolts = vec![0.into_expression(); self.joltages.len()];
+        for b in 0..self.buttons.len() {
+            for &light in &self.buttons[b].lights {
+                // sum each button that affected this counter
+                jolts[light] += button_presses[b];
+            }
+        }
+
+        for (presses, target_joltage) in jolts.into_iter().zip(&self.joltages) {
+            problem.add_constraint(presses.eq(*target_joltage as f64));
+        }
+
+        let solution = problem.solve().ok()?;
+
+        let mut sum = 0.0;
+        for presses in button_presses {
+            let v = solution.value(presses);
+
+            sum += v;
+        }
+
+        Some(sum as u64)
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct Button {
+    lights: Vec<usize>,
+    state: usize,
+}
+
+impl Button {
+    pub fn new(lights: Vec<usize>, state: usize) -> Self {
+        Self { lights, state }
+    }
+
+    pub fn state(&self) -> usize {
+        self.state
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn machine_3_test() {
+        let buttons = vec![
+            Button::new(vec![0, 1, 2, 3, 4], 0b11111),
+            Button::new(vec![0, 3, 4], 0b11001),
+            Button::new(vec![0, 1, 2, 4, 5], 0b110111),
+            Button::new(vec![1, 2], 0b110),
+        ];
+
+        let machine = Machine::new(0b101110, buttons, Vec::new());
+        assert_eq!(machine.fewest_buttons_lights().unwrap(), 2);
+    }
+}
