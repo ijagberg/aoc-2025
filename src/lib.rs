@@ -722,44 +722,44 @@ mod day8 {
 #[cfg(test)]
 mod day9 {
     use super::*;
-    use crate::theater::Theater;
     use simple_grid::GridIndex;
 
     fn test_file(name: &str) -> String {
         read_file_contents(&input_data("day9", name))
     }
 
-    fn parse_theater(content: &str) -> Theater {
-        let mut corners = Vec::new();
+    fn parse_red_tiles(content: &str) -> Vec<GridIndex> {
+        let mut red_tiles = Vec::new();
         for line in content.lines() {
             let (col, row) = line.split_once(",").unwrap();
-            corners.push(GridIndex::new(col.parse().unwrap(), row.parse().unwrap()));
+            red_tiles.push(GridIndex::new(col.parse().unwrap(), row.parse().unwrap()));
         }
 
-        Theater::new(corners)
+        red_tiles
     }
 
-    fn solve_part1(input: &str, connections: usize) -> usize {
-        let theater = parse_theater(input);
-        theater.largest_rectangle()
+    fn solve_part1(input: &str) -> usize {
+        let red_tiles = parse_red_tiles(input);
+        theater::largest_rectangle(&red_tiles)
     }
 
     fn solve_part2(input: &str) -> usize {
-        todo!()
+        let red_tiles = parse_red_tiles(input);
+        theater::largest_red_green_rectangle(&red_tiles)
     }
 
     #[test]
     fn part1() {
-        assert_eq!(solve_part1(&test_file("input.txt"), 1000), 102816);
+        assert_eq!(solve_part1(&test_file("input.txt")), 4776100539);
     }
 
-    // #[test]
-    // fn part2() {
-    //     assert_eq!(solve_part2(&test_file("input.txt")), 100011612);
-    // }
-    //
-    // #[test]
-    // fn part2_example1() {
-    //     assert_eq!(solve_part2(&test_file("example1.txt")), 25272);
-    // }
+    #[test]
+    fn part2() {
+        assert_eq!(solve_part2(&test_file("input.txt")), 1476550548);
+    }
+
+    #[test]
+    fn part2_example1() {
+        assert_eq!(solve_part2(&test_file("example1.txt")), 24);
+    }
 }
