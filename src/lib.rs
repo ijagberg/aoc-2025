@@ -3,6 +3,7 @@ use std::io::Read;
 
 mod batteries;
 mod cephalopod;
+mod devices;
 mod ids;
 mod ingredients;
 mod junctions;
@@ -871,4 +872,81 @@ mod day10 {
     fn part2_example1() {
         assert_eq!(solve_part2(&test_file("example1.txt")), 33);
     }
+}
+
+#[cfg(test)]
+mod day11 {
+    use super::*;
+    use crate::devices::Devices;
+    use std::collections::HashMap;
+
+    fn test_file(name: &str) -> String {
+        read_file_contents(&input_data("day11", name))
+    }
+
+    fn parse_devices(content: &str) -> Devices {
+        let lines: Vec<_> = content.lines().collect();
+        let mut names: HashMap<String, usize> = lines
+            .iter()
+            .map(|l| {
+                l.split(" ")
+                    .next()
+                    .unwrap()
+                    .trim_end_matches(":")
+                    .to_owned()
+            })
+            .enumerate()
+            .map(|(i, l)| (l, i))
+            .collect();
+
+        names.insert("out".to_string(), names.len());
+
+        dbg!(&names);
+
+        let mut paths: HashMap<usize, Vec<usize>> = HashMap::new();
+        for line in 0..lines.len() {
+            dbg!(&lines[line]);
+            paths.insert(
+                line,
+                lines[line]
+                    .split(" ")
+                    .skip(1)
+                    .map(|n| names[n.trim()].clone())
+                    .collect(),
+            );
+        }
+
+        dbg!(&names, &paths);
+
+        Devices::new(names, paths)
+    }
+
+    fn solve_part1(input: &str) -> usize {
+        let devices = parse_devices(input);
+        devices.count_paths_between("you", "out")
+    }
+
+    fn solve_part2(input: &str) -> usize {
+        todo!()
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(solve_part1(&test_file("input.txt")), 520);
+    }
+
+    #[test]
+    fn part1_example1() {
+        assert_eq!(solve_part1(&test_file("example1.txt")), 5);
+    }
+
+    // #[test]
+    // fn part2() {
+    //     assert_eq!(solve_part2(&test_file("input.txt")), 20626);
+    // }
+    //
+    // #[test]
+    // fn part2_example1() {
+    //     assert_eq!(solve_part2(&test_file("example1.txt")), 33);
+    // }
 }
