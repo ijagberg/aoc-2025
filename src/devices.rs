@@ -1,59 +1,41 @@
 use simple_grid::Grid;
 use std::collections::{HashMap, HashSet, VecDeque};
 
+pub type Id = [char; 3];
+pub type Graph = HashMap<Id, Vec<Id>>;
+
 pub struct Devices {
-    names: HashMap<String, usize>,
-    paths: HashMap<usize, Vec<usize>>,
+    paths: Graph,
 }
 
 impl Devices {
-    pub fn new(names: HashMap<String, usize>, paths: HashMap<usize, Vec<usize>>) -> Self {
-        Self { names, paths }
+    pub fn new(paths: Graph) -> Self {
+        Self { paths }
     }
 
-    // pub fn count_paths_between(&self, from: &str, to: &str) -> usize {
-    //     let from = self.names[from];
-    //     let to = self.names[to];
-    //
-    //     let mut memo = HashMap::new();
-    //     let mut queue = VecDeque::new();
-    //     queue.push_back((1, from));
-    //     while let Some((paths_to_here, from)) = queue.pop_front() {
-    //         if let Some(m) = memo.get(&from) {}
-    //     }
-    //     todo!()
-    // }
+    pub fn count_paths_between(&self, from: Id, to: Id) -> u64 {
+        let mut memo = HashMap::new();
+        memo.insert(to, 1);
+        Self::count_paths_between_rec(&mut memo, &self.paths, from)
+    }
 
-    pub fn count_paths_between(&self, from: &str, to: &str) -> usize {
-        let from = self.names[from];
-        let to = self.names[to];
-
-        // reversed_dir[3] contains a list of the nodes that can go directly to 3
-        let mut reversed_dir: HashMap<usize, Vec<usize>> = HashMap::new();
-
-        for (from, tos) in &self.paths {
-            for to in tos {
-                reversed_dir
-                    .entry(*to)
-                    .and_modify(|e| e.push(*from))
-                    .or_insert(vec![*from]);
-            }
+    fn count_paths_between_rec(memo: &mut HashMap<Id, u64>, graph: &Graph, start: Id) -> u64 {
+        if let Some(&count) = memo.get(&start) {
+            return count;
         }
 
-        let mut memo = vec![0; self.names.len()];
-        let mut queue = VecDeque::new();
-        queue.push_back(to);
-        dbg!(&reversed_dir);
-        dbg!(from);
-        while let Some(curr) = queue.pop_front() {
-            if let Some(rev) = reversed_dir.get(&curr) {
-                for &one_step_to_here in &reversed_dir[&curr] {
-                    memo[one_step_to_here] += 1;
-                    queue.push_back(one_step_to_here);
-                }
-            }
-        }
+        let count = graph
+            .get(&start)
+            .map(|neighbors| {
+                neighbors
+                    .iter()
+                    .copied()
+                    .map(|node| Self::count_paths_between_rec(memo, graph, node))
+                    .sum()
+            })
+            .unwrap_or_default();
+        memo.insert(start, count);
 
-        memo[from]
+        count
     }
 }

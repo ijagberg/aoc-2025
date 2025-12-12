@@ -877,7 +877,7 @@ mod day10 {
 #[cfg(test)]
 mod day11 {
     use super::*;
-    use crate::devices::Devices;
+    use crate::devices::{Devices, Graph};
     use std::collections::HashMap;
 
     fn test_file(name: &str) -> String {
@@ -886,44 +886,33 @@ mod day11 {
 
     fn parse_devices(content: &str) -> Devices {
         let lines: Vec<_> = content.lines().collect();
-        let mut names: HashMap<String, usize> = lines
-            .iter()
-            .map(|l| {
-                l.split(" ")
-                    .next()
-                    .unwrap()
-                    .trim_end_matches(":")
-                    .to_owned()
-            })
-            .enumerate()
-            .map(|(i, l)| (l, i))
-            .collect();
 
-        names.insert("out".to_string(), names.len());
-
-        dbg!(&names);
-
-        let mut paths: HashMap<usize, Vec<usize>> = HashMap::new();
-        for line in 0..lines.len() {
-            dbg!(&lines[line]);
+        let mut paths: Graph = HashMap::new();
+        for line in lines {
+            let parts: Vec<_> = line.split(' ').collect();
+            let name = parts[0]
+                .trim_end_matches(":")
+                .chars()
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap();
             paths.insert(
-                line,
-                lines[line]
-                    .split(" ")
-                    .skip(1)
-                    .map(|n| names[n.trim()].clone())
+                name,
+                parts[1..]
+                    .iter()
+                    .map(|p| p.chars().collect::<Vec<_>>().try_into().unwrap())
                     .collect(),
             );
         }
 
-        dbg!(&names, &paths);
+        dbg!(&paths);
 
-        Devices::new(names, paths)
+        Devices::new(paths)
     }
 
-    fn solve_part1(input: &str) -> usize {
+    fn solve_part1(input: &str) -> u64 {
         let devices = parse_devices(input);
-        devices.count_paths_between("you", "out")
+        devices.count_paths_between(['y', 'o', 'u'], ['o', 'u', 't'])
     }
 
     fn solve_part2(input: &str) -> usize {
