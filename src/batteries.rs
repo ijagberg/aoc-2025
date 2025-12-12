@@ -18,7 +18,7 @@ fn max_joltage_rec(batteries: &[u64], count: u64, so_far: &mut Vec<u64>) {
     let segment = &batteries[..=batteries.len() - count as usize];
 
     let (index, &digit) = segment
-        .into_iter()
+        .iter()
         .enumerate()
         .rev()
         .max_by_key(|(_, v)| **v)

@@ -39,13 +39,13 @@ mod day1 {
     fn parse_rotations(content: &str) -> Vec<Rotation> {
         let mut rotations = Vec::new();
         for line in content.lines() {
-            rotations.push(Rotation::from_str(&line).unwrap());
+            rotations.push(Rotation::from_str(line).unwrap());
         }
         rotations
     }
 
     fn solve_part1(input: &str) -> u64 {
-        let rotations = parse_rotations(&input);
+        let rotations = parse_rotations(input);
         let mut dial = Dial::new(50).unwrap();
         let mut password = 0;
         for Rotation(dir, dist) in rotations {
@@ -62,7 +62,7 @@ mod day1 {
     }
 
     fn solve_part2(input: &str) -> u64 {
-        let rotations = parse_rotations(&input);
+        let rotations = parse_rotations(input);
         let mut dial = Dial::new(50).unwrap();
         let mut password = 0_u64;
         for Rotation(dir, dist) in rotations {
@@ -123,7 +123,7 @@ mod day2 {
     fn parse_ranges(content: &str) -> Vec<IdRange> {
         content
             .split(",")
-            .map(|r| IdRange::from_str(&r).expect(&format!("invalid range '{}'", r)))
+            .map(|r| IdRange::from_str(r).unwrap_or_else(|_| panic!("invalid range '{}'", r)))
             .collect()
     }
 
@@ -135,10 +135,10 @@ mod day2 {
             }
 
             let half_len = s.len() / 2;
-            &s[..half_len] != &s[half_len..]
+            s[..half_len] != s[half_len..]
         };
 
-        let ranges = parse_ranges(&input);
+        let ranges = parse_ranges(input);
         let mut invalid_sum = 0;
         for range in ranges {
             for id in range.from..=range.to {
@@ -172,7 +172,7 @@ mod day2 {
             true
         };
 
-        let ranges = parse_ranges(&input);
+        let ranges = parse_ranges(input);
         let mut invalid_sum = 0;
         for range in ranges {
             for id in range.from..=range.to {
@@ -245,7 +245,7 @@ mod day3 {
         let mut sum = 0;
         for line in batteries {
             let m = max_joltage(&line, 12);
-            sum += m as u64;
+            sum += m;
         }
 
         sum
@@ -463,7 +463,7 @@ mod day6 {
                 lines[0].len(),
                 lines.len() - 1,
                 lines[0..lines.len() - 1]
-                    .into_iter()
+                    .iter()
                     .flat_map(|l| l.chars())
                     .collect(),
             ),

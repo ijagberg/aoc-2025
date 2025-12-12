@@ -27,7 +27,7 @@ impl FromStr for Rotation {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let dir = &s[0..1];
         let dist = &s[1..];
-        let dir = Direction::from_str(&dir)?;
+        let dir = Direction::from_str(dir)?;
         let dist = u64::from_str(dist).map_err(|_| ())?;
         Ok(Self(dir, dist))
     }

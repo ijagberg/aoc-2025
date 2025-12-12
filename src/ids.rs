@@ -16,8 +16,8 @@ impl FromStr for IdRange {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (from, to) = s.split_once("-").ok_or(())?;
-        let from = u64::from_str(&from.trim()).map_err(|_| ())?;
-        let to = u64::from_str(&to.trim()).map_err(|_| ())?;
+        let from = u64::from_str(from.trim()).map_err(|_| ())?;
+        let to = u64::from_str(to.trim()).map_err(|_| ())?;
         Ok(Self::new(from, to))
     }
 }
