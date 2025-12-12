@@ -57,8 +57,7 @@ pub fn largest_red_green_rectangle(red_tiles: &[GridIndex]) -> usize {
     let mut areas = Vec::with_capacity(red_tiles.len().pow(2));
     for i in 0..red_tiles.len() {
         let corner_a = red_tiles[i];
-        for j in i + 1..red_tiles.len() {
-            let corner_b = red_tiles[j];
+        for &corner_b in red_tiles.iter().skip(1) {
             let area = area(corner_a, corner_b);
             areas.push((corner_a, corner_b, area));
         }
@@ -81,8 +80,7 @@ fn fill_grid(
 ) {
     // join all the red tiles
     let mut from = red_tiles[0];
-    for to_i in 1..red_tiles.len() {
-        let to = red_tiles[to_i];
+    for &to in red_tiles.iter().skip(1) {
         let comp_from = GridIndex::new(compressed_x[&from.column()], compressed_y[&from.row()]);
         let comp_to = GridIndex::new(compressed_x[&to.column()], compressed_y[&to.row()]);
         grid[comp_from] = Tile::Red;
@@ -203,8 +201,7 @@ pub fn largest_rectangle(red_tiles: &[GridIndex]) -> usize {
     let mut largest_rectangle = 0;
     for a in 0..red_tiles.len() {
         let corner_a = red_tiles[a];
-        for b in a + 1..red_tiles.len() {
-            let corner_b = red_tiles[b];
+        for &corner_b in red_tiles.iter().skip(1) {
             let area = area(corner_a, corner_b);
             if area > largest_rectangle {
                 largest_rectangle = area;
